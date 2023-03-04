@@ -1,4 +1,5 @@
 import System.IO
+import Data.List (sort, reverse)
 import Text.Parsec (parse)
 
 -- note this can be replaced by the `lines` function
@@ -20,10 +21,18 @@ _parseLines (str:strings) nums
 parseLines :: [String] -> [[Int]]
 parseLines strings = _parseLines strings []
 
+-- parse the file into a multidimensional array, where the ith element represents the total calories an elf holds
+parseElves :: String -> [Int]
+parseElves contents = map sum ((parseLines . splitLines) contents)
+
 -- calculate the elf with the most calories
 part1 :: String -> Int
-part1 contents = maximum (map sum ((parseLines . splitLines) contents))
+part1 contents = maximum (parseElves contents)
+
+-- calculate total calories of top 3 elfs
+part2 :: String -> Int
+part2 contents = sum (take 3 (reverse (sort (parseElves contents))))
 
 main = do
     contents <- readFile "problem_data/day1.txt"
-    print (part1 contents)
+    print (part1 contents, part2 contents)
