@@ -2,28 +2,23 @@ import System.IO
 import Data.List (sort, reverse)
 import Text.Parsec (parse)
 
--- note this can be replaced by the `lines` function
-_splitLines :: [Char] -> String -> [String] -- split a string into new lines
-_splitLines [] prev_line = [prev_line]
-_splitLines content prev_line
-    | head content == '\n'  = prev_line : _splitLines (tail content) "" -- add prev_line to the list of lines, recurse with empty prev_line
-    | otherwise             = _splitLines (tail content) (prev_line ++ [head content]) --recurse while adding to prev_line
+accLine :: Char -> [String] -> [String]
+accLine '\n' str_list = "" : str_list -- new line so add new string
+accLine char (str:str_list) = (char : str) : str_list -- add to previous string (the head as we use fold right)
 
-splitLines :: [Char] -> [String]
-splitLines str = _splitLines str ""
+lines' :: String -> [String]
+lines' = foldr accLine [""]
 
-_parseLines :: [String] -> [Int] -> [[Int]]
-_parseLines [] nums = [nums]
-_parseLines (str:strings) nums
-    | str == ""     = nums : _parseLines strings [] -- empty line denotes the start of a new elf, so we have fully parsed the previous elf
-    | otherwise     = _parseLines strings ((read str :: Int) : nums)
+-- accumulate the result of lines into a list representing the calorie content of an elves positions
+accParseLine :: String -> [[Int]] -> [[Int]]
+accParseLine "" nums = [] : nums -- line break adds a new elf
+accParseLine str (num:nums) = ((read str :: Int) : num) : nums
 
-parseLines :: [String] -> [[Int]]
-parseLines strings = _parseLines strings []
+parseLines = foldr accParseLine [[]]
 
 -- parse the file into a multidimensional array, where the ith element represents the total calories an elf holds
 parseElves :: String -> [Int]
-parseElves contents = map sum ((parseLines . splitLines) contents)
+parseElves contents = map sum ((parseLines . lines') contents)
 
 -- calculate the elf with the most calories
 part1 :: String -> Int
