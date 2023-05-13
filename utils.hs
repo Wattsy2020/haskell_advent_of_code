@@ -7,3 +7,6 @@ splitStrAcc splitChar c currLines@(line : remaining)
 
 splitStr :: Char -> String -> [String]
 splitStr splitChar = foldr (splitStrAcc splitChar) [""]
+
+count :: (a -> Bool) -> [a] -> Int
+count predicate = length . filter predicate
