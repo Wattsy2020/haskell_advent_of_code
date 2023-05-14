@@ -1,14 +1,9 @@
-import Data.Char (digitToInt)
-import Data.Set qualified as Set
-import Utils (count, splitStr)
+import Utils (count, splitStr, strToInt)
 
-type Assignment = Set.Set Int
-
-strToInt :: String -> Int
-strToInt str = foldr1 (\x acc -> x * 10 + acc) (map digitToInt str)
+type Assignment = (Int, Int)
 
 parseAssignment :: String -> Assignment
-parseAssignment str = Set.fromList [low .. high]
+parseAssignment str = (low, high)
   where
     low : high : _ = map strToInt (splitStr '-' str)
 
@@ -20,11 +15,17 @@ parseLine line = (first, second)
 parseFile :: String -> [(Assignment, Assignment)]
 parseFile contents = map parseLine (lines contents)
 
+isSubset :: Assignment -> Assignment -> Bool
+isSubset (low1, high1) (low2, high2) = (low1 >= low2) && (high1 <= high2)
+
 anyIsSubset :: (Assignment, Assignment) -> Bool
-anyIsSubset (first, second) = Set.isSubsetOf first second || Set.isSubsetOf second first
+anyIsSubset (a1, a2) = isSubset a1 a2 || isSubset a2 a1
+
+inRange :: Int -> Int -> Int -> Bool
+inRange low high value = low <= value && value <= high
 
 hasOverlap :: (Assignment, Assignment) -> Bool
-hasOverlap = not . Set.null . uncurry Set.intersection
+hasOverlap ((low1, high1), (low2, high2)) = or [inRange low1 high1 low2, inRange low1 high1 low2, inRange low2 high2 low1, inRange low2 high2 high1]
 
 main = do
   contents <- readFile "problem_data/day4.txt"
