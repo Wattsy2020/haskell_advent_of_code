@@ -1,70 +1,83 @@
--- TODO: this whole code really needs enums
-import System.IO
+data Shape = Rock | Paper | Scissors deriving (Eq)
+
+data Outcome = Lose | Draw | Win
 
 -- 1 = Rock
 -- 2 = Paper
 -- 3 = Scissors
-parseShape :: Char -> Int
-parseShape str
-  | str == 'A' = 1
-  | str == 'X' = 1
-  | str == 'B' = 2
-  | str == 'Y' = 2
-  | str == 'C' = 3
-  | str == 'Z' = 3
+parseShape :: Char -> Shape
+parseShape 'A' = Rock
+parseShape 'X' = Rock
+parseShape 'B' = Paper
+parseShape 'Y' = Paper
+parseShape 'C' = Scissors
+parseShape 'Z' = Scissors
+
+parseOutcome :: Char -> Outcome
+parseOutcome 'X' = Lose
+parseOutcome 'Y' = Draw
+parseOutcome 'Z' = Win
 
 -- parse a line into a list of two Ints, 1st for opponent's shape and 2nd for your shape
-parseStrategy :: String -> (Int, Int)
+parseStrategy :: String -> (Shape, Shape)
 parseStrategy line = (parseShape char1, parseShape char2)
   where
-    split = words line
-    char1 = head (split !! 0)
-    char2 = head (split !! 1)
+    [[char1], [char2]] = words line
 
-parseStrategies :: String -> [(Int, Int)]
+parseStrategies :: String -> [(Shape, Shape)]
 parseStrategies contents = map parseStrategy (lines contents)
 
--- return the shape that wins against the input
--- todo: this is basically just defining a group of (1, 2, 3) with + - operations, probably haskell has a way to do this
-winingShape :: Int -> Int
-winingShape a
-  | a == 1 = 2
-  | a == 2 = 3
-  | a == 3 = 1
+parseStrategy2 :: String -> (Shape, Outcome)
+parseStrategy2 line = (parseShape char1, parseOutcome char2)
+  where
+    [[char1], [char2]] = words line
 
-losingShape :: Int -> Int
-losingShape a
-  | a == 1 = 3
-  | a == 2 = 1
-  | a == 3 = 2
+parseStrategies2 :: String -> [(Shape, Outcome)]
+parseStrategies2 contents = map parseStrategy2 (lines contents)
+
+-- return the shape that wins against the input
+winingShape :: Shape -> Shape
+winingShape Rock = Paper
+winingShape Paper = Scissors
+winingShape Scissors = Rock
+
+losingShape :: Shape -> Shape
+losingShape Rock = Scissors
+losingShape Paper = Rock
+losingShape Scissors = Paper
 
 -- 0 for loss, 3 for draw, 6 for win
 -- a win is when b wins over a (convention of the question)
-scoreMatch :: (Int, Int) -> Int
+scoreMatch :: (Shape, Shape) -> Int
 scoreMatch (a, b)
   | b == winingShape a = 6
   | b == a = 3
-  | b == losingShape a = 0
+  | otherwise = 0
 
-scoreGame :: (Int, Int) -> Int
-scoreGame (a, b) = b + scoreMatch (a, b)
+scoreShape :: Shape -> Int
+scoreShape Rock = 1
+scoreShape Paper = 2
+scoreShape Scissors = 3
+
+scoreGame :: (Shape, Shape) -> Int
+scoreGame (a, b) = scoreShape b + scoreMatch (a, b)
 
 -- return the shape need to accomplish a match outcome
-shapeForOutcome :: (Int, Int) -> Int
-shapeForOutcome (opponentShape, outcome)
-  | outcome == 1 = losingShape opponentShape -- loss
-  | outcome == 2 = opponentShape -- draw
-  | outcome == 3 = winingShape opponentShape -- win
+shapeForOutcome :: Outcome -> Shape -> Shape
+shapeForOutcome Lose opponentShape = losingShape opponentShape
+shapeForOutcome Draw opponentShape = opponentShape
+shapeForOutcome Win opponentShape = winingShape opponentShape
 
-scoreGame2 (opponentShape, outcome) = yourShape + scoreMatch (opponentShape, yourShape)
+scoreGame2 :: (Shape, Outcome) -> Int
+scoreGame2 (opponentShape, outcome) = scoreShape yourShape + scoreMatch (opponentShape, yourShape)
   where
-    yourShape = shapeForOutcome (opponentShape, outcome)
+    yourShape = shapeForOutcome outcome opponentShape
 
 part1 :: String -> Int
 part1 contents = sum (map scoreGame (parseStrategies contents))
 
 part2 :: String -> Int
-part2 contents = sum (map scoreGame2 (parseStrategies contents))
+part2 contents = sum (map scoreGame2 (parseStrategies2 contents))
 
 main = do
   contents <- readFile "problem_data/day2.txt"
