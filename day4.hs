@@ -1,35 +1,43 @@
 import Utils (count, splitStr, strToInt)
 
-type Assignment = (Int, Int)
+data Range = Range Int Int | Empty deriving (Show)
 
-parseAssignment :: String -> Assignment
-parseAssignment str = (low, high)
+makeRange :: Int -> Int -> Range
+makeRange low high
+  | low > high = Empty
+  | otherwise = Range low high
+
+isNull :: Range -> Bool
+isNull Empty = True
+isNull _ = False
+
+isSubset :: Range -> Range -> Bool
+isSubset (Range low1 high1) (Range low2 high2) = (low1 >= low2) && (high1 <= high2)
+
+anyIsSubset :: Range -> Range -> Bool
+anyIsSubset r1 r2 = isSubset r1 r2 || isSubset r2 r1
+
+intersection :: Range -> Range -> Range
+intersection _ Empty = Empty
+intersection Empty _ = Empty
+intersection (Range low1 high1) (Range low2 high2) = makeRange (max low1 low2) (min high1 high2)
+
+parseRange :: String -> Range
+parseRange str = Range low high
   where
-    low : high : _ = map strToInt (splitStr '-' str)
+    [low, high] = map strToInt (splitStr '-' str)
 
-parseLine :: String -> (Assignment, Assignment)
+parseLine :: String -> (Range, Range)
 parseLine line = (first, second)
   where
-    first : second : _ = map parseAssignment (splitStr ',' line)
+    first : second : _ = map parseRange (splitStr ',' line)
 
-parseFile :: String -> [(Assignment, Assignment)]
+parseFile :: String -> [(Range, Range)]
 parseFile contents = map parseLine (lines contents)
-
-isSubset :: Assignment -> Assignment -> Bool
-isSubset (low1, high1) (low2, high2) = (low1 >= low2) && (high1 <= high2)
-
-anyIsSubset :: (Assignment, Assignment) -> Bool
-anyIsSubset (a1, a2) = isSubset a1 a2 || isSubset a2 a1
-
-inRange :: Int -> Int -> Int -> Bool
-inRange low high value = low <= value && value <= high
-
-hasOverlap :: (Assignment, Assignment) -> Bool
-hasOverlap ((low1, high1), (low2, high2)) = or [inRange low1 high1 low2, inRange low1 high1 low2, inRange low2 high2 low1, inRange low2 high2 high1]
 
 main = do
   contents <- readFile "problem_data/day4.txt"
   let parsed = parseFile contents
-  let part1 = count anyIsSubset
-  let part2 = count hasOverlap
-  print (part1 parsed, part2 parsed)
+  let part1 = count (uncurry anyIsSubset) parsed
+  let part2 = count (not . isNull . uncurry intersection) parsed
+  print (part1, part2)
