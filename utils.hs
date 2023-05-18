@@ -1,14 +1,17 @@
-module Utils where
+module Utils (splitList, splitStr, count, strToInt) where
 
 import Data.Char (digitToInt)
 
-splitStrAcc :: Char -> Char -> [String] -> [String]
-splitStrAcc splitChar c currLines@(line : remaining)
-  | splitChar == c = "" : currLines
-  | otherwise = (c : line) : remaining
+splitListAcc :: Eq a => [a] -> a -> a -> [[a]] -> [[a]]
+splitListAcc initElem splitElem newElem currList@(first : remaining)
+  | splitElem == newElem = initElem : currList
+  | otherwise = (newElem : first) : remaining
+
+splitList :: Eq a => [a] -> a -> [a] -> [[a]]
+splitList initElem splitElem = foldr (splitListAcc initElem splitElem) [initElem]
 
 splitStr :: Char -> String -> [String]
-splitStr splitChar = foldr (splitStrAcc splitChar) [""]
+splitStr splitChar = foldr (splitListAcc "" splitChar) [""]
 
 count :: (a -> Bool) -> [a] -> Int
 count predicate = length . filter predicate
