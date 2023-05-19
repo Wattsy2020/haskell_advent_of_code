@@ -2,6 +2,7 @@
 
 import Data.Char (isNumber)
 import Data.List (elemIndices, intercalate)
+import Data.Map (Map, (!))
 import Data.Map qualified as Map
 import Data.Sequence qualified as Seq
 import Utils (splitList, splitStr, strToInt)
@@ -10,7 +11,7 @@ data Procedure = Procedure {quantity :: Int, source :: Int, target :: Int} deriv
 
 type CrateCol = Seq.Seq Char
 
-type CrateMap = Map.Map Int CrateCol
+type CrateMap = Map Int CrateCol
 
 -- what we want is a map of colnumber -> stack of elems in that column
 -- so build a list(tuple(colnumber, elemchar)) and then add that into a Map (there is a method to customise behaviour)
@@ -56,8 +57,7 @@ insertCrates2 = (Seq.><)
 applyProcedure :: (CrateCol -> CrateCol -> CrateCol) -> CrateMap -> Procedure -> CrateMap
 applyProcedure insertCrates crateMap Procedure {..} = insertedNew
   where
-    sourceCol = case Map.lookup source crateMap of Just col -> col
-    (toBeMoved, leftInPlace) = Seq.splitAt quantity sourceCol
+    (toBeMoved, leftInPlace) = Seq.splitAt quantity (crateMap ! source)
     removedOld = Map.insert source leftInPlace crateMap
     insertedNew = Map.insertWith insertCrates target toBeMoved removedOld
 

@@ -1,3 +1,4 @@
+import Data.Map (Map, (!))
 import Data.Map qualified as Map
 import Data.Set qualified as Set
 import System.IO
@@ -22,11 +23,11 @@ readRucksacks contents = map splitRucksack (lines contents)
 commonElem :: ItemGroup -> Char
 commonElem = Set.findMin . foldl1 Set.intersection -- findMin is a hack to get the single element in the set
 
-charMap :: Map.Map Char Int
+charMap :: Map Char Int
 charMap = Map.fromList $ zip (['a' .. 'z'] ++ ['A' .. 'Z']) [1 ..]
 
 priority :: Char -> Int
-priority x = case Map.lookup x charMap of Just num -> num
+priority x = charMap ! x
 
 -- calculate the sum of the priorities of the duplicate items
 sumPriority :: [ItemGroup] -> Int
