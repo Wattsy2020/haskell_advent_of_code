@@ -1,4 +1,4 @@
-data Shape = Rock | Paper | Scissors deriving (Eq)
+data Shape = Rock | Paper | Scissors deriving (Eq, Enum)
 
 data Outcome = Lose | Draw | Win
 
@@ -37,14 +37,12 @@ parseStrategies2 contents = map parseStrategy2 (lines contents)
 
 -- return the shape that wins against the input
 winingShape :: Shape -> Shape
-winingShape Rock = Paper
-winingShape Paper = Scissors
 winingShape Scissors = Rock
+winingShape other = succ other
 
 losingShape :: Shape -> Shape
 losingShape Rock = Scissors
-losingShape Paper = Rock
-losingShape Scissors = Paper
+losingShape other = pred other
 
 -- 0 for loss, 3 for draw, 6 for win
 -- a win is when b wins over a (convention of the question)
