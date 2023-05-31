@@ -1,4 +1,8 @@
-data Shape = Rock | Paper | Scissors deriving (Eq, Enum)
+{-# LANGUAGE DeriveAnyClass #-}
+
+import Utils (CyclicEnum, pred', succ')
+
+data Shape = Rock | Paper | Scissors deriving (Bounded, Eq, Enum, CyclicEnum)
 
 data Outcome = Lose | Draw | Win
 
@@ -35,14 +39,9 @@ parseStrategy2 line = (parseShape char1, parseOutcome char2)
 parseStrategies2 :: String -> [(Shape, Outcome)]
 parseStrategies2 contents = map parseStrategy2 (lines contents)
 
--- return the shape that wins against the input
-winingShape :: Shape -> Shape
-winingShape Scissors = Rock
-winingShape other = succ other
+winingShape = succ'
 
-losingShape :: Shape -> Shape
-losingShape Rock = Scissors
-losingShape other = pred other
+losingShape = pred'
 
 -- 0 for loss, 3 for draw, 6 for win
 -- a win is when b wins over a (convention of the question)

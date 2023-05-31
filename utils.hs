@@ -1,4 +1,6 @@
-module Utils (splitList, splitStr, count, strToInt) where
+{-# LANGUAGE DefaultSignatures #-}
+
+module Utils (splitList, splitStr, count, strToInt, CyclicEnum, succ', pred') where
 
 import Data.Char (digitToInt)
 
@@ -18,3 +20,17 @@ count predicate = length . filter predicate
 
 strToInt :: String -> Int
 strToInt str = foldr1 (\x acc -> x * 10 + acc) (map digitToInt str)
+
+class CyclicEnum a where
+  pred' :: a -> a
+  succ' :: a -> a
+
+  default pred' :: (Bounded a, Enum a, Eq a) => a -> a
+  pred' x
+    | x == (minBound :: a) = maxBound :: a
+    | otherwise = pred x
+
+  default succ' :: (Bounded a, Enum a, Eq a) => a -> a
+  succ' x
+    | x == (maxBound :: a) = minBound :: a
+    | otherwise = succ x
