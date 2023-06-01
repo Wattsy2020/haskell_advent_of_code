@@ -1,8 +1,9 @@
 {-# LANGUAGE DefaultSignatures #-}
 
-module Utils (splitList, splitStr, count, strToInt, CyclicEnum, succ', pred') where
+module Utils (splitList, splitStr, count, strToInt, CyclicEnum, succ', pred', filterFoldable) where
 
 import Data.Char (digitToInt)
+import Data.Foldable (toList)
 
 splitListAcc :: Eq a => [a] -> a -> a -> [[a]] -> [[a]]
 splitListAcc initElem splitElem newElem currList@(first : remaining)
@@ -19,7 +20,10 @@ count :: (a -> Bool) -> [a] -> Int
 count predicate = length . filter predicate
 
 strToInt :: String -> Int
-strToInt str = foldr1 (\x acc -> x * 10 + acc) (map digitToInt str)
+strToInt str = foldl1 (\acc x -> 10 * acc + x) (map digitToInt str)
+
+filterFoldable :: (Foldable f) => (a -> Bool) -> f a -> [a]
+filterFoldable predicate = filter predicate . toList
 
 class CyclicEnum a where
   pred' :: a -> a
