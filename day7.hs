@@ -82,14 +82,13 @@ part1 :: FSTree -> Int
 part1 = sum . map size . filterDir (\x -> size x <= 100_000)
 
 part2 :: FSTree -> Int
-part2 = minimum . map size . filterDir (\x -> size x >= 8381165)
+part2 rootTree = (minimum . map size . filterDir (\x -> size x >= spaceRequired)) rootTree
+  where
+    spaceRequired = size rootTree - 40_000_000
 
 main = do
   contents <- readFile "problem_data/day7.txt"
   let (commands, dirTree) = parseLines contents
-  print commands
-  print dirTree
-  print $ size dirTree -- bug in the insertion code, directory size is smaller than what the question says
+
   print $ part1 dirTree
   print $ part2 dirTree
-  print $ map (\x -> (name x, size x)) $ filterDir (\x -> size x >= 8381165) dirTree
