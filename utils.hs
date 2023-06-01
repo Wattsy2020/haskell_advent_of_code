@@ -20,6 +20,7 @@ count :: (a -> Bool) -> [a] -> Int
 count predicate = length . filter predicate
 
 strToInt :: String -> Int
+strToInt ('-' : str) = -1 * strToInt str
 strToInt str = foldl1 (\acc x -> 10 * acc + x) (map digitToInt str)
 
 filterFoldable :: (Foldable f) => (a -> Bool) -> f a -> [a]
