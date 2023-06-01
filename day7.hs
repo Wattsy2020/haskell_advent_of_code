@@ -4,7 +4,7 @@ import Data.Map qualified as Map
 import Data.Sequence (Seq ((:<|), (:|>)), (<|), (|>))
 import Data.Sequence qualified as Seq
 import Debug.Trace (trace)
-import Utils (strToInt)
+import Utils (safeInsert, strToInt)
 
 -- Need a Tree to store the directory structure
 data DirTree a = File {name :: String, size :: a} | Dir {name :: String, size :: a, children :: Map String (DirTree a)} deriving (Show)
@@ -26,9 +26,6 @@ instance Functor DirTree where
 makeDir :: String -> FSTree
 makeDir name = Dir name 0 Map.empty
 
-root :: FSTree
-root = makeDir "/"
-
 -- And a sequence of commands to represent the position in the tree (e.g. cd dir1, cd dir2, cd dir3), then cd .. just pops off the most recent command
 data Command = Root | Parent | CD String | LS deriving (Show)
 
@@ -37,7 +34,7 @@ getFile Seq.Empty dirTree = dirTree
 getFile ((CD dirname) :<| remaining) (Dir _ _ children) = getFile remaining (children ! dirname)
 
 insertFile :: FSTree -> Seq Command -> FSTree -> FSTree
-insertFile toInsert Seq.Empty (Dir dirName dirSize children) = Dir dirName (dirSize + size toInsert) (Map.insert (name toInsert) toInsert children)
+insertFile toInsert Seq.Empty (Dir dirName dirSize children) = Dir dirName (dirSize + size toInsert) $ safeInsert (name toInsert) toInsert children
 insertFile toInsert ((CD dirname) :<| remaining) (Dir dirName dirSize children) = Dir dirName (dirSize + size toInsert) (Map.insert dirname updatedChild children)
   where
     updatedChild = insertFile toInsert remaining (children ! dirname)
@@ -50,9 +47,9 @@ parseCommand ("cd" : remaining) = case remaining of
   [name] -> CD name
 
 addCommand :: Seq Command -> Command -> Seq Command
-addCommand commands Root = Seq.empty
+addCommand _ Root = Seq.empty
 addCommand (init :|> _) Parent = init
-addCommand commands com@(CD name) = commands |> com
+addCommand commands com@(CD _) = commands |> com
 addCommand commands LS = commands -- ignore ls, our code will parse the next lines anyway
 
 parseFile :: String -> String -> Seq Command -> FSTree -> FSTree
@@ -68,7 +65,7 @@ parseLine (commands, dirTree) line = case words line of
   [info, name] -> (commands, parseFile info name commands dirTree)
 
 parseLines :: String -> (Seq Command, FSTree)
-parseLines = foldl parseLine (Seq.empty, root) . lines
+parseLines = foldl parseLine (Seq.empty, makeDir "/") . lines
 
 _filterDir :: (FSTree -> Bool) -> FSTree -> [FSTree] -> [FSTree]
 _filterDir _ (File _ _) filtered = filtered
@@ -82,7 +79,7 @@ filterDir :: (FSTree -> Bool) -> FSTree -> [FSTree]
 filterDir f dir = _filterDir f dir []
 
 part1 :: FSTree -> Int
-part1 dirTree = foldr (\x acc -> size x + acc) 0 $ filterDir (\x -> size x <= 100_000) dirTree
+part1 = sum . map size . filterDir (\x -> size x <= 100_000)
 
 part2 :: FSTree -> Int
 part2 = minimum . map size . filterDir (\x -> size x >= 8381165)
@@ -90,14 +87,9 @@ part2 = minimum . map size . filterDir (\x -> size x >= 8381165)
 main = do
   contents <- readFile "problem_data/day7.txt"
   let (commands, dirTree) = parseLines contents
-  -- let part1 = sum $ filterFoldable (const True) dirTree
   print commands
   print dirTree
   print $ size dirTree -- bug in the insertion code, directory size is smaller than what the question says
   print $ part1 dirTree
   print $ part2 dirTree
   print $ map (\x -> (name x, size x)) $ filterDir (\x -> size x >= 8381165) dirTree
-
--- print $ part2 dirTree
-
--- print $ sumTree dirTree

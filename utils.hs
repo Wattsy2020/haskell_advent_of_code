@@ -1,9 +1,11 @@
 {-# LANGUAGE DefaultSignatures #-}
 
-module Utils (splitList, splitStr, count, strToInt, CyclicEnum, succ', pred', filterFoldable) where
+module Utils (splitList, splitStr, count, strToInt, CyclicEnum, succ', pred', filterFoldable, safeInsert) where
 
 import Data.Char (digitToInt)
 import Data.Foldable (toList)
+import Data.Map (Map)
+import Data.Map qualified as Map
 
 splitListAcc :: Eq a => [a] -> a -> a -> [[a]] -> [[a]]
 splitListAcc initElem splitElem newElem currList@(first : remaining)
@@ -25,6 +27,9 @@ strToInt str = foldl1 (\acc x -> 10 * acc + x) (map digitToInt str)
 
 filterFoldable :: (Foldable f) => (a -> Bool) -> f a -> [a]
 filterFoldable predicate = filter predicate . toList
+
+safeInsert :: Ord k => k -> v -> Map k v -> Map k v
+safeInsert = Map.insertWith (\_ _ -> error "Shouldn't be updating existing values")
 
 class CyclicEnum a where
   pred' :: a -> a
