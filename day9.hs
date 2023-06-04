@@ -43,24 +43,26 @@ moveTail headPos tailPos
     diff = headPos - tailPos
 
 -- move the Head one step in Direction, then update the tail positions
-moveRope :: (V2 Int, V2 Int) -> Direction -> (V2 Int, V2 Int)
-moveRope (head, tail) direction = (newHead, newTail)
+moveRope :: [V2 Int] -> Direction -> [V2 Int]
+moveRope (head : tails) direction = newHead : newTails
   where
     newHead = moveHead direction head
-    newTail = moveTail newHead tail
+    newTails = tail $ scanl moveTail newHead tails
 
 unrollStep :: Step -> [Direction]
 unrollStep (Step direction distance) = replicate distance direction
 
-calcPositions :: [Step] -> (V2 Int, V2 Int) -> [(V2 Int, V2 Int)]
+calcPositions :: [Step] -> [V2 Int] -> [[V2 Int]]
 calcPositions steps positions = scanl moveRope positions (concatMap unrollStep steps)
+
+-- simulate and count the unique positions, starting with an initial position
+uniquePositions :: [Step] -> [V2 Int] -> Int
+uniquePositions steps = length . nub . map last . calcPositions steps
 
 main = do
   contents <- readFile "problem_data/day9.txt"
   let steps = parseSteps contents
-  let initPos = (V2 0 0, V2 0 0)
-  let positions = calcPositions steps initPos
-  let part1 = (length . nub . map snd) positions
-  -- print steps
-  -- print positions
+  let part1 = uniquePositions steps [V2 0 0, V2 0 0]
   print part1
+  let part2 = uniquePositions steps (replicate 10 (V2 0 0))
+  print part2
