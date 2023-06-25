@@ -1,6 +1,5 @@
 import Data.List (reverse, sort)
 import System.IO
-import Text.Parsec (parse)
 
 accLine :: Char -> [String] -> [String]
 accLine '\n' str_list = "" : str_list -- new line so add new string

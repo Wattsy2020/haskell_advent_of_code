@@ -1,6 +1,6 @@
 {-# LANGUAGE DefaultSignatures #-}
 
-module Utils (splitList, splitStr, count, strToInt, CyclicEnum, succ', pred', filterFoldable, safeInsert) where
+module Utils (splitList, splitStr, count, strToInt, CyclicEnum, succ', pred', filterFoldable, safeInsert, split) where
 
 import Data.Char (digitToInt)
 import Data.Foldable (toList)
@@ -17,6 +17,20 @@ splitList initElem splitElem = foldr (splitListAcc initElem splitElem) [initElem
 
 splitStr :: Char -> String -> [String]
 splitStr splitChar = foldr (splitListAcc "" splitChar) [""]
+
+splitAcc :: [String] -> String -> String -> [String]
+splitAcc splitStrs@(currString : splitStrs') splitStr remaining
+  | remLen < splitLen = (remaining ++ currString) : splitStrs'
+  | remTail == splitStr = splitAcc ("" : splitStrs) splitStr remHead -- encounter splitStr, start new section
+  | otherwise = splitAcc ((last remaining : currString) : splitStrs') splitStr (init remaining) -- no split, add 1 character to current and continue
+  where
+    splitLen = length splitStr
+    remLen = length remaining
+    (remHead, remTail) = splitAt (remLen - splitLen) remaining
+
+-- split toSplit string: splits a string whenever the substring is encountered
+split :: String -> String -> [String]
+split = splitAcc [""]
 
 count :: (a -> Bool) -> [a] -> Int
 count predicate = length . filter predicate
